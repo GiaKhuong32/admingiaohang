@@ -1,0 +1,138 @@
+.pm-content-section {
+    padding: 24px;
+    background-color: #f9f9f9;
+}
+
+
+.pm-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-left: 250px;
+}
+
+.pm-card-header h3 {
+    margin: 0 0 16px;
+    font-size: 20px;
+}
+
+
+.pm-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.pm-table th,
+.pm-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.pm-table th {
+    background-color: #f0f0f0;
+    font-weight: 600;
+}
+
+
+.pm-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 6px;
+}
+
+.pm-btn-sm {
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.pm-btn-info {
+    background-color: #2196F3;
+    color: white;
+}
+
+.pm-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.pm-btn:hover {
+    opacity: 0.9;
+}
+
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.badge-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #ff9800;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #9e9e9e;
+    color: white;
+}
+
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 24px;
+    width: 400px;
+    max-width: 95%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modal-header h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.close-btn {
+    font-size: 22px;
+    cursor: pointer;
+    color: #888;
+}
+
+.close-btn:hover {
+    color: #000;
+}
