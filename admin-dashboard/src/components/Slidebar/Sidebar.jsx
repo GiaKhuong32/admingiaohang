@@ -6,9 +6,6 @@ const Sidebar = () => {
     <div>
       <div className="sidebar">
         <div className="sidebar-options">
-           <NavLink to= '/Adminmain' className="sidebar-option">
-              <p>Trang chủ</p>
-            </NavLink>
             <NavLink to= '/User_Management' className="sidebar-option">
               <p>Quản lý người dùng</p>
             </NavLink>

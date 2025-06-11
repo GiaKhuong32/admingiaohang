@@ -5,7 +5,6 @@ import User_Management from './pages/User-Management/User_Management'
 import Order_Management from './pages/Order-Management/Order_Management'
 import Payment_Management from './pages/Payment-Management/Payment_Management'
 import Warehouse_Setup from './pages/Warehouse-Setup/Warehouse_Setup'
-import Adminmain from './pages/Admin-main/Adminmain'
 import Navbar from './components/Navbar/Navbar'
 import Service from './pages/Service/Service'
 import Transactions from './pages/Transactions/Transactions'
@@ -20,7 +19,6 @@ const App = () => {
       <div className="app-content">
         <Sidebar/>
         <Routes>
-          <Route path="/Adminmain" element={<Adminmain />} />
           <Route path="/User_Management" element={<User_Management/>}/>
           <Route path="/Order_Management" element={<Order_Management/>}/>
           <Route path="/Service" element={<Service/>}/>
