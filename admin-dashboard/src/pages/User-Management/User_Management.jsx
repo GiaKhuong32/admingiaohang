@@ -3,53 +3,66 @@ import axios from 'axios';
 import './User_Management.css';
 
 const User_Management = () => {
-  const [users, setUsers] = useState([]);
+  const [view, setView] = useState('customer');
+  const [customers, setCustomers] = useState([]);
+  const [staffs, setStaffs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [editUser, setEditUser] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'Customer',
-    status: 'Active',
-    password: ''
-  });
+  const [editItem, setEditItem] = useState(null);
+  const [formData, setFormData] = useState({});
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get('http://localhost:3000/api/users');
-      setUsers(res.data);
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách user:', err);
-    }
+  const convertDateToSQL = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 19).replace('T', ' ');
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchCustomers();
+    fetchStaffs();
   }, []);
 
-  const openModal = (id) => {
-    if (id !== null) {
-      const user = users.find(u => u.id === id);
-      setEditUser(user.id);
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        role: user.role,
-        status: user.status,
-        password: user.password
+  const fetchCustomers = async () => {
+    try {
+      const res = await axios.get('http://localhost:3000/api/customers');
+      setCustomers(res.data);
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách khách hàng:', err);
+    }
+  };
+
+  const fetchStaffs = async () => {
+    try {
+      const res = await axios.get('http://localhost:3000/api/staff');
+      setStaffs(res.data);
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách nhân viên:', err);
+    }
+  };
+  const openModal = (item = null) => {
+    setEditItem(item);
+    if (view === 'customer') {
+      setFormData(item || {
+        Customer_type: '',
+        Name: '',
+        Phone: '',
+        Street: '',
+        Ward: '',
+        District: '',
+        City: ''
       });
     } else {
-      setEditUser(null);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        role: 'Customer',
-        status: 'Active',
-        password: ''
+      setFormData(item ? {
+        ...item,
+        Employment_date: item.Employment_date ? item.Employment_date.slice(0, 10) : '',
+        Is_active: !!item.Is_active
+      } : {
+        Name: '',
+        Position: '',
+        Phone: '',
+        Email: '',
+        Employment_date: '',
+        Is_active: true
       });
     }
     setModalVisible(true);
@@ -57,158 +70,241 @@ const User_Management = () => {
 
   const closeModal = () => {
     setModalVisible(false);
-    setEditUser(null);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'Customer',
-      status: 'Active',
-      password: ''
-    });
+    setEditItem(null);
+    setFormData({});
   };
 
   const handleChange = (e) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
+    const { id, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: type === 'checkbox'
+        ? checked
+        : id === 'Is_active'
+          ? value === 'true'
+          : value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) {
-      alert('Vui lòng nhập đầy đủ tên, email và mật khẩu!');
-      return;
-    }
-
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      status: formData.status,
-      password: formData.password
-    };
-
     try {
-      if (editUser !== null) {
-        await axios.put(`http://localhost:3000/api/users/${editUser}`, payload);
-      } else {
-        await axios.post('http://localhost:3000/api/users', payload);
+      let dataToSend = { ...formData };
+
+      if (view === 'staff') {
+        dataToSend.Employment_date = convertDateToSQL(formData.Employment_date);
+        dataToSend.Is_active = !!formData.Is_active;
       }
-      fetchUsers();
+
+      if (view === 'staff') {
+        if (editItem) {
+          await axios.put(`http://localhost:3000/api/staff/${editItem.StaffID}`, dataToSend);
+        } else {
+          await axios.post('http://localhost:3000/api/staff', dataToSend);
+        }
+        fetchStaffs();
+      } else {
+        if (editItem) {
+          await axios.put(`http://localhost:3000/api/customers/${editItem.CustomerID}`, formData);
+        }
+        fetchCustomers();
+      }
+
       closeModal();
     } catch (err) {
-      console.error('Lỗi khi lưu user:', err);
+      console.error('Lỗi khi lưu:', err.response?.data || err.message);
     }
   };
 
-  const deleteUser = async (id) => {
-    if (window.confirm(`Bạn có chắc muốn xoá user ID ${id}?`)) {
+  const deleteStaff = async (id) => {
+    if (window.confirm(`Bạn có chắc muốn xoá nhân viên ID ${id}?`)) {
       try {
-        await axios.delete(`http://localhost:3000/api/users/${id}`);
-        fetchUsers();
+        await axios.delete(`http://localhost:3000/api/staff/${id}`);
+        fetchStaffs();
       } catch (err) {
-        console.error('Lỗi khi xoá user:', err);
+        console.error('Lỗi khi xoá nhân viên:', err);
       }
     }
   };
+  const filteredCustomers = customers.filter(c =>
+    c.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.Phone?.includes(searchTerm)
+  );
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStaffs = staffs.filter(s =>
+    s.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.Email?.toLowerCase().includes(searchTerm)
   );
 
   return (
     <section className="um-section">
       <div className="um-card">
         <div className="um-card-header">
-          <h3>Quản lý Người dùng</h3>
-          <button className="um-btn um-btn-primary" onClick={() => openModal(null)}>
-            <i className="fas fa-plus"></i> Thêm người dùng
-          </button>
+          <h3>Quản lý {view === 'customer' ? 'Khách hàng' : 'Nhân viên'}</h3>
+          <div>
+            <button className="um-btn um-btn-primary" onClick={() => setView('customer')}>Khách hàng</button>
+            <button className="um-btn um-btn-primary" onClick={() => setView('staff')}>Nhân viên</button>
+           {view === 'staff' && (
+  <button className="um-btn um-btn-primary" onClick={() => openModal(null)}>Thêm</button>
+)}
+
+          </div>
         </div>
+
         <input
           type="text"
           className="um-form-group"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Tìm kiếm theo tên hoặc email..."
+          placeholder="Tìm kiếm theo tên, email hoặc SĐT..."
           style={{ width: 'auto', padding: '8px 12px', marginBottom: '15px' }}
         />
-        <table className="um-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tên</th>
-              <th>Email</th>
-              <th>Điện thoại</th>
-              <th>Vai trò</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map(user => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.phone}</td>
-                <td>{user.role}</td>
-                <td>{user.status}</td>
-                <td>
-                  <button className="um-btn um-btn-warning um-btn-sm" onClick={() => openModal(user.id)}>
-                    <i className="fas fa-edit"></i> Sửa
-                  </button>
-                  <button className="um-btn um-btn-danger um-btn-sm" onClick={() => deleteUser(user.id)}>
-                    <i className="fas fa-trash"></i> Xoá
-                  </button>
-                </td>
+
+        {view === 'customer' && (
+          <table className="um-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Loại</th>
+                <th>Tên</th>
+                <th>Điện thoại</th>
+                <th>Địa chỉ</th>
+                <th>Hành động</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredCustomers.map(cust => (
+                <tr key={cust.CustomerID}>
+                  <td>{cust.CustomerID}</td>
+                  <td>{cust.Customer_type}</td>
+                  <td>{cust.Name}</td>
+                  <td>{cust.Phone}</td>
+                  <td>{`${cust.Street}, ${cust.Ward}, ${cust.District}, ${cust.City}`}</td>
+                  <td>
+                    <button className="um-btn um-btn-warning um-btn-sm" onClick={() => openModal(cust)}>Sửa</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {view === 'staff' && (
+          <table className="um-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Chức vụ</th>
+                <th>Điện thoại</th>
+                <th>Email</th>
+                <th>Ngày vào làm</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStaffs.map(stf => (
+                <tr key={stf.StaffID}>
+                  <td>{stf.StaffID}</td>
+                  <td>{stf.Name}</td>
+                  <td>{stf.Position}</td>
+                  <td>{stf.Phone}</td>
+                  <td>{stf.Email}</td>
+                  <td>{stf.Employment_date?.slice(0, 10)}</td>
+                  <td>
+                    <span className={`um-badge ${stf.Is_active ? 'um-badge-success' : 'um-badge-secondary'}`}>
+                      {stf.Is_active ? 'Hoạt động' : 'Không hoạt động'}
+                    </span>
+                  </td>
+                  <td>
+                    <button className="um-btn um-btn-warning um-btn-sm" onClick={() => openModal(stf)}>Sửa</button>
+                    <button className="um-btn um-btn-danger um-btn-sm" onClick={() => deleteStaff(stf.StaffID)}>Xoá</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {modalVisible && (
         <div className="um-modal" style={{ display: 'block' }}>
           <div className="um-modal-content">
             <div className="um-modal-header">
-              <h4>{editUser !== null ? 'Sửa Người dùng' : 'Thêm Người dùng'}</h4>
+              <h4>{editItem ? 'Sửa' : 'Thêm'} {view === 'staff' ? 'Nhân viên' : 'Khách hàng'}</h4>
               <span className="um-close-btn" onClick={closeModal}>&times;</span>
             </div>
             <form onSubmit={handleSubmit}>
-              <div className="um-form-group">
-                <label htmlFor="name">Tên:</label>
-                <input type="text" id="name" value={formData.name} onChange={handleChange} required />
-              </div>
-              <div className="um-form-group">
-                <label htmlFor="email">Email:</label>
-                <input type="email" id="email" value={formData.email} onChange={handleChange} required />
-              </div>
-              <div className="um-form-group">
-                <label htmlFor="phone">Điện thoại:</label>
-                <input type="text" id="phone" value={formData.phone} onChange={handleChange} />
-              </div>
-              <div className="um-form-group">
-                <label htmlFor="role">Vai trò:</label>
-                <select id="role" value={formData.role} onChange={handleChange}>
-                  <option value="Admin">Admin</option>
-                  <option value="Shipper">Shipper</option>
-                  <option value="Customer">Customer</option>
-                </select>
-              </div>
-              <div className="um-form-group">
-                <label htmlFor="status">Trạng thái:</label>
-                <select id="status" value={formData.status} onChange={handleChange}>
-                  <option value="Active">Hoạt động</option>
-                  <option value="Inactive">Ngưng hoạt động</option>
-                </select>
-              </div>
-              <div className="um-form-group">
-                <label htmlFor="password">Mật khẩu:</label>
-                <input type="password" id="password" value={formData.password} onChange={handleChange} required />
-              </div>
+              {view === 'staff' ? (
+                <>
+                  <div className="um-form-group">
+                    <label htmlFor="Name">Tên:</label>
+                    <input type="text" id="Name" value={formData.Name} onChange={handleChange} required />
+                  </div>
+               <div className="um-form-group">
+  <label htmlFor="Position">Chức vụ:</label>
+  <select id="Position" value={formData.Position} onChange={handleChange} required>
+    <option value="">-- Chọn chức vụ --</option>
+    <option value="Nhân viên kho">Nhân viên kho</option>
+    <option value="Lái xe">Lái xe</option>
+    <option value="Nhân viên vận chuyển">Nhân viên vận chuyển</option>
+    <option value="Admin">Admin</option>
+  </select>
+</div>
+
+                  <div className="um-form-group">
+                    <label htmlFor="Phone">Điện thoại:</label>
+                    <input type="text" id="Phone" value={formData.Phone} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Email">Email:</label>
+                    <input type="email" id="Email" value={formData.Email} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Employment_date">Ngày vào làm:</label>
+                    <input type="date" id="Employment_date" value={formData.Employment_date} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Is_active">Trạng thái:</label>
+                    <select id="Is_active" value={formData.Is_active ? 'true' : 'false'} onChange={handleChange}>
+                      <option value="true">Hoạt động</option>
+                      <option value="false">Không hoạt động</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="um-form-group">
+                    <label htmlFor="Customer_type">Loại:</label>
+                    <input type="text" id="Customer_type" value={formData.Customer_type} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Name">Tên:</label>
+                    <input type="text" id="Name" value={formData.Name} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Phone">Số điện thoại:</label>
+                    <input type="text" id="Phone" value={formData.Phone} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Street">Đường:</label>
+                    <input type="text" id="Street" value={formData.Street} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="Ward">Phường:</label>
+                    <input type="text" id="Ward" value={formData.Ward} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="District">Quận:</label>
+                    <input type="text" id="District" value={formData.District} onChange={handleChange} />
+                  </div>
+                  <div className="um-form-group">
+                    <label htmlFor="City">Thành phố:</label>
+                    <input type="text" id="City" value={formData.City} onChange={handleChange} />
+                  </div>
+                </>
+              )}
               <button type="submit" className="um-btn um-btn-primary">Lưu</button>
               <button type="button" className="um-btn um-btn-secondary" onClick={closeModal}>Hủy</button>
             </form>

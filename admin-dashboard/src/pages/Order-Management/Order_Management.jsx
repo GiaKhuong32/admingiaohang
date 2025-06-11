@@ -1,168 +1,180 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './Order_Management.css';
 
 const Order_Management = () => {
   const [orders, setOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editOrder, setEditOrder] = useState(null);
-  const [formData, setFormData] = useState({
-    customerName: '',
-    pickupAddress: '',
-    deliveryAddress: '',
-    shipperId: '',
-    status: 'Pending',
-    orderDate: ''
-  });
+  const [customers, setCustomers] = useState([]);
+  const [services, setServices] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editOrderId, setEditOrderId] = useState(null);
 
-  const fetchOrders = async () => {
-    try {
-      const res = await axios.get('http://localhost:3000/api/orders');
-      setOrders(res.data);
-    } catch (err) {
-      console.error('Lỗi khi lấy dữ liệu orders:', err);
-    }
-  };
+  const [newOrder, setNewOrder] = useState({
+    Order_code: '',
+    Sender_id: '',
+    Service_id: '',
+    Total_package: '',
+    Total_weight: '',
+    Ship_cost: '',
+    Payment_status: '',
+    Order_status: ''
+  });
 
   useEffect(() => {
     fetchOrders();
+    fetchCustomers();
+    fetchServices();
   }, []);
 
-  const openOrderModal = (id) => {
-    if (id !== null) {
-      const order = orders.find(o => o.id === id);
-      setEditOrder(order.id);
-      setFormData({
-        customerName: order.customer_name,
-        pickupAddress: order.pickup_address,
-        deliveryAddress: order.delivery_address,
-        shipperId: order.shipper_id || '',
-        status: order.status,
-        orderDate: order.order_date ? new Date(order.order_date).toISOString().split('T')[0] : ''
-      });
-    } else {
-      setEditOrder(null);
-      setFormData({
-        customerName: '',
-        pickupAddress: '',
-        deliveryAddress: '',
-        shipperId: '',
-        status: 'Pending',
-        orderDate: ''
-      });
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/orders');
+      const data = await res.json();
+      setOrders(data);
+    } catch (err) {
+      console.error('Lỗi khi lấy đơn hàng:', err);
     }
-    setModalVisible(true);
   };
 
-  const closeModal = () => {
-    setModalVisible(false);
-    setEditOrder(null);
-    setFormData({
-      customerName: '',
-      pickupAddress: '',
-      deliveryAddress: '',
-      shipperId: '',
-      status: 'Pending',
-      orderDate: ''
-    });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.customerName || !formData.pickupAddress || !formData.deliveryAddress || !formData.orderDate) {
-      alert('Vui lòng điền đầy đủ thông tin!');
-      return;
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/customers');
+      const data = await res.json();
+      setCustomers(data);
+    } catch (err) {
+      console.error('Lỗi khi lấy khách hàng:', err);
     }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/services');
+      const data = await res.json();
+      setServices(data);
+    } catch (err) {
+      console.error('Lỗi khi lấy dịch vụ:', err);
+    }
+  };
+  const handleAddOrder = async () => {
+    const {
+      Order_code, Sender_id, Service_id,
+      Total_package, Total_weight,
+      Ship_cost, Payment_status, Order_status
+    } = newOrder;
+
+    if (!Order_code || !Sender_id || !Service_id) return;
+
+    const payload = {
+      Order_code,
+      Sender_id,
+      Service_id,
+      Total_package: Total_package || 0,
+      Total_weight: Total_weight || 0,
+      Ship_cost: Ship_cost || 0,
+      Payment_status: Payment_status || 'Chưa thanh toán',
+      Order_status: Order_status || 'Mới tạo'
+    };
 
     try {
-      const payload = {
-        customer_name: formData.customerName,
-        pickup_address: formData.pickupAddress,
-        delivery_address: formData.deliveryAddress,
-        shipper_id: formData.shipperId || null,
-        status: formData.status,
-        order_date: new Date(formData.orderDate).toISOString().split('T')[0]
-      };
-
-      if (editOrder !== null) {
-        await axios.put(`http://localhost:3000/api/orders/${editOrder}`, payload);
+      if (editOrderId) {
+        await fetch(`http://localhost:3000/api/orders/${editOrderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       } else {
-        await axios.post('http://localhost:3000/api/orders', payload);
+        await fetch('http://localhost:3000/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       }
 
+      resetForm();
       fetchOrders();
-      closeModal();
     } catch (err) {
-      console.error('Lỗi khi lưu đơn hàng:', err);
-      alert('Đã xảy ra lỗi khi lưu đơn hàng. Kiểm tra lại dữ liệu.');
+      console.error('Lỗi khi thêm/cập nhật đơn hàng:', err);
     }
   };
 
-  const deleteOrder = async (id) => {
-    if (window.confirm(`Bạn có chắc muốn xóa đơn hàng ID: ${id}?`)) {
+  const handleEditOrder = (order) => {
+    setNewOrder({
+      Order_code: order.Order_code || '',
+      Sender_id: order.Sender_id || '',
+      Service_id: order.Service_id || '',
+      Total_package: order.Total_package || '',
+      Total_weight: order.Total_weight || '',
+      Ship_cost: order.Ship_cost || '',
+      Payment_status: order.Payment_status || '',
+      Order_status: order.Order_status || ''
+    });
+    setEditOrderId(order.OrderID);
+    setShowModal(true);
+  };
+
+  const handleDeleteOrder = async (id) => {
+    if (window.confirm('Bạn có chắc muốn xoá đơn hàng này?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/orders/${id}`);
+        await fetch(`http://localhost:3000/api/orders/${id}`, { method: 'DELETE' });
         fetchOrders();
       } catch (err) {
-        console.error('Lỗi khi xóa đơn hàng:', err);
+        console.error('Lỗi khi xoá đơn hàng:', err);
       }
     }
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    String(order.id).includes(searchTerm)
-  );
+  const resetForm = () => {
+    setNewOrder({
+      Order_code: '',
+      Sender_id: '',
+      Service_id: '',
+      Total_package: '',
+      Total_weight: '',
+      Ship_cost: '',
+      Payment_status: '',
+      Order_status: ''
+    });
+    setEditOrderId(null);
+    setShowModal(false);
+  };
 
   return (
-    <section className="om-section">
+    <div className="om-section" style={{ padding: 30 }}>
       <div className="om-card">
         <div className="om-card-header">
           <h3>Quản lý Đơn hàng</h3>
-          <button className="om-btn om-btn-primary" onClick={() => openOrderModal(null)}>
-            <i className="fas fa-plus"></i> Thêm Đơn hàng
+          <button className="om-btn om-btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+            Thêm Đơn hàng
           </button>
         </div>
-        <input
-          type="text"
-          className="om-form-group"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Tìm kiếm đơn hàng (ID, Tên KH)..."
-          style={{ width: 'auto', padding: '8px 12px', marginBottom: '15px' }}
-        />
+
         <table className="om-table">
           <thead>
             <tr>
-              <th>ID Đơn</th>
-              <th>Khách hàng</th>
-              <th>Địa chỉ nhận</th>
-              <th>Địa chỉ giao</th>
-              <th>Shipper</th>
+              <th>Mã Đơn</th>
+              <th>Người gửi</th>
+              <th>Dịch vụ</th>
+              <th>Số kiện</th>
+              <th>Khối lượng</th>
+              <th>Phí</th>
+              <th>Thanh toán</th>
               <th>Trạng thái</th>
-              <th>Ngày đặt</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map(order => (
-              <tr key={order.id}>
-                <td>{order.id}</td>
-                <td>{order.customer_name}</td>
-                <td>{order.pickup_address}</td>
-                <td>{order.delivery_address}</td>
-                <td>{order.shipper_id || 'Chưa gán'}</td>
-                <td>{order.status}</td>
-                <td>{new Date(order.order_date).toLocaleDateString('vi-VN')}</td>
+            {orders.map(order => (
+              <tr key={order.OrderID}>
+                <td>{order.Order_code}</td>
+                <td>{order.SenderName}</td>
+                <td>{order.Service_name}</td>
+                <td>{order.Total_package}</td>
+                <td>{order.Total_weight}</td>
+                <td>{order.Ship_cost}</td>
+                <td>{order.Payment_status}</td>
+                <td>{order.Order_status}</td>
                 <td>
-                  <button className="om-btn om-btn-warning om-btn-sm" onClick={() => openOrderModal(order.id)}><i className="fas fa-edit"></i> Sửa</button>
-                  <button className="om-btn om-btn-danger om-btn-sm" onClick={() => deleteOrder(order.id)}><i className="fas fa-trash"></i> Xóa</button>
+                  <button className="om-btn om-btn-warning om-btn-sm" onClick={() => handleEditOrder(order)}>Sửa</button>
+                  <button className="om-btn om-btn-danger om-btn-sm" onClick={() => handleDeleteOrder(order.OrderID)}>Xoá</button>
                 </td>
               </tr>
             ))}
@@ -170,52 +182,69 @@ const Order_Management = () => {
         </table>
       </div>
 
-      {modalVisible && (
-        <div className="om-modal" style={{ display: 'block' }}>
+      {showModal && (
+        <div className="om-modal">
           <div className="om-modal-content">
-            <div className="om-modal-header">
-              <h4>{editOrder !== null ? 'Sửa Đơn hàng' : 'Thêm Đơn hàng'}</h4>
-              <span className="om-close-btn" onClick={closeModal}>&times;</span>
-            </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={(e) => { e.preventDefault(); handleAddOrder(); }}>
+              <h4>{editOrderId ? 'Cập nhật Đơn hàng' : 'Thêm Đơn hàng'}</h4>
+
               <div className="om-form-group">
-                <label htmlFor="customerName">Tên Khách hàng:</label>
-                <input type="text" id="customerName" name="customerName" value={formData.customerName} onChange={handleChange} required />
+                <label>Mã đơn hàng</label>
+                <input type="text" value={newOrder.Order_code} onChange={(e) => setNewOrder({ ...newOrder, Order_code: e.target.value })} required />
               </div>
+
               <div className="om-form-group">
-                <label htmlFor="pickupAddress">Địa chỉ nhận:</label>
-                <input type="text" id="pickupAddress" name="pickupAddress" value={formData.pickupAddress} onChange={handleChange} required />
-              </div>
-              <div className="om-form-group">
-                <label htmlFor="deliveryAddress">Địa chỉ giao:</label>
-                <input type="text" id="deliveryAddress" name="deliveryAddress" value={formData.deliveryAddress} onChange={handleChange} required />
-              </div>
-              <div className="om-form-group">
-                <label htmlFor="shipperId">Shipper ID:</label>
-                <input type="text" id="shipperId" name="shipperId" value={formData.shipperId} onChange={handleChange} />
-              </div>
-              <div className="om-form-group">
-                <label htmlFor="status">Trạng thái:</label>
-                <select id="status" name="status" value={formData.status} onChange={handleChange}>
-                  <option value="Pending">Chờ xử lý</option>
-                  <option value="Processing">Đang xử lý</option>
-                  <option value="Shipping">Đang giao</option>
-                  <option value="Delivered">Đã giao</option>
-                  <option value="Cancelled">Đã hủy</option>
-                  <option value="Returned">Trả hàng</option>
+                <label>Người gửi</label>
+                <select value={newOrder.Sender_id} onChange={(e) => setNewOrder({ ...newOrder, Sender_id: e.target.value })} required>
+                  <option value="">-- Chọn người gửi --</option>
+                  {customers.map((s) => (
+                    <option key={s.CustomerID} value={s.CustomerID}>{s.Name}</option>
+                  ))}
                 </select>
               </div>
+
               <div className="om-form-group">
-                <label htmlFor="orderDate">Ngày đặt:</label>
-                <input type="date" id="orderDate" name="orderDate" value={formData.orderDate} onChange={handleChange} required />
+                <label>Dịch vụ</label>
+                <select value={newOrder.Service_id} onChange={(e) => setNewOrder({ ...newOrder, Service_id: e.target.value })} required>
+                  <option value="">-- Chọn dịch vụ --</option>
+                  {services.map((s) => (
+                    <option key={s.Service_id} value={s.Service_id}>{s.Service_name}</option>
+                  ))}
+                </select>
               </div>
-              <button type="submit" className="om-btn om-btn-primary">Lưu</button>
-              <button type="button" className="om-btn om-btn-secondary" onClick={closeModal}>Hủy</button>
+
+              <div className="om-form-group">
+                <label>Số kiện</label>
+                <input type="number" value={newOrder.Total_package} onChange={(e) => setNewOrder({ ...newOrder, Total_package: e.target.value })} />
+              </div>
+
+              <div className="om-form-group">
+                <label>Khối lượng</label>
+                <input type="number" value={newOrder.Total_weight} onChange={(e) => setNewOrder({ ...newOrder, Total_weight: e.target.value })} />
+              </div>
+
+              <div className="om-form-group">
+                <label>Phí vận chuyển</label>
+                <input type="number" value={newOrder.Ship_cost} onChange={(e) => setNewOrder({ ...newOrder, Ship_cost: e.target.value })} />
+              </div>
+
+              <div className="om-form-group">
+                <label>Trạng thái thanh toán</label>
+                <input type="text" value={newOrder.Payment_status} onChange={(e) => setNewOrder({ ...newOrder, Payment_status: e.target.value })} />
+              </div>
+
+              <div className="om-form-group">
+                <label>Trạng thái đơn hàng</label>
+                <input type="text" value={newOrder.Order_status} onChange={(e) => setNewOrder({ ...newOrder, Order_status: e.target.value })} />
+              </div>
+
+              <button className="om-btn om-btn-primary" type="submit">Lưu</button>
+              <button className="om-btn om-btn-secondary" type="button" onClick={resetForm}>Hủy</button>
             </form>
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

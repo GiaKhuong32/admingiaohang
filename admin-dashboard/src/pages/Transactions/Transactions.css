@@ -1,27 +1,27 @@
-.om-card {
+.tr-card {
   background-color: #fff;
   border-radius: 8px;
-  padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin: 20px;
-  margin-left: 250px
+  padding: 20px;
+  margin-bottom: 20px;
+  margin-left: 250px;
 }
 
-.om-card-header {
+.tr-card-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
 }
 
-.om-card-header h3 {
+.tr-card-header h3 {
   font-size: 1.4em;
-  color: #4CAF50;
+  color: #4caf50;
 }
 
-.om-btn {
+.tr-btn {
   padding: 8px 14px;
   border: none;
   border-radius: 5px;
@@ -30,48 +30,48 @@
   text-decoration: none;
   display: inline-block;
   margin-right: 5px;
-  transition: opacity 0.3s;
+  transition: background-color 0.3s ease;
 }
 
-.om-btn-sm {
+.tr-btn-sm {
   padding: 6px 10px;
   font-size: 0.85em;
 }
 
-.om-btn-primary {
-  background-color: #4CAF50;
+.tr-btn-primary {
+  background-color: #4caf50;
   color: white;
 }
 
-.om-btn-warning {
+.tr-btn-warning {
   background-color: #ff9800;
   color: white;
 }
 
-.om-btn-danger {
+.tr-btn-danger {
   background-color: #f44336;
   color: white;
 }
 
-.om-btn-secondary {
+.tr-btn-secondary {
   background-color: #6c757d;
   color: white;
 }
 
-.om-form-group {
+.tr-form-group {
   margin-bottom: 15px;
   display: block;
 }
 
-.om-form-group label {
+.tr-form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: 5px;
 }
 
-.om-form-group input,
-.om-form-group textarea,
-.om-form-group select {
+.tr-form-group input,
+.tr-form-group select,
+.tr-form-group textarea {
   width: 100%;
   padding: 10px;
   font-size: 1em;
@@ -79,31 +79,31 @@
   border-radius: 4px;
 }
 
-.om-table {
+.tr-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.om-table th,
-.om-table td {
+.tr-table th,
+.tr-table td {
   padding: 10px;
   border: 1px solid #ccc;
   text-align: left;
 }
 
-.om-table th {
+.tr-table th {
   background-color: #f9f9f9;
 }
 
-.om-table tbody tr:nth-child(even) {
+.tr-table tbody tr:nth-child(even) {
   background-color: #fdfdfd;
 }
 
-.om-table tbody tr:hover {
+.tr-table tbody tr:hover {
   background-color: #f1f1f1;
 }
 
-.om-modal {
+.tr-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -115,37 +115,18 @@
   align-items: center;
   z-index: 999;
 }
-.om-modal-content {
+
+.tr-modal-content {
   background-color: #fff;
   padding: 25px;
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
-  max-height: 90vh; 
-  overflow-y: auto; 
+  max-height: 90vh;
+  overflow-y: auto;
   position: relative;
 }
 
-
-
-.om-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.om-close-btn {
-  font-size: 28px;
-  font-weight: bold;
-  color: #aaa;
-  cursor: pointer;
-}
-
-.om-close-btn:hover {
-  color: #333;
-}
-
-.om-section {
+.tr-section {
   padding: 20px;
 }

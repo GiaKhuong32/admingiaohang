@@ -3,34 +3,106 @@ import './Payment_Management.css';
 
 const Payment_Management = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [formMode, setFormMode] = useState('add');
+  const [formData, setFormData] = useState({
+    Order_id: '',
+    Payment_method: '',
+    Amount: '',
+    Payment_date: '',
+    Transaction_id: '',
+    Notes: ''
+  });
+
   useEffect(() => {
-    fetch('http://localhost:3000/api/payments') 
+    fetchPayments();
+  }, []);
+
+  const fetchPayments = () => {
+    fetch('http://localhost:3000/api/payments')
       .then(res => res.json())
       .then(data => setPayments(data))
       .catch(err => console.error('Lỗi khi tải danh sách thanh toán:', err));
-  }, []);
+  };
 
-  const handleConfirm = (id) => {
-    fetch(`http://localhost:3000/api/payments/${id}/confirm`, {
-      method: 'PUT'
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    const method = formMode === 'add' ? 'POST' : 'PUT';
+    const url = formMode === 'add'
+      ? 'http://localhost:3000/api/payments'
+      : `http://localhost:3000/api/payments/${selectedPayment.PaymentID}`;
+
+    fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
     })
       .then(res => res.json())
       .then(() => {
-        
-        setPayments(prev =>
-          prev.map(p =>
-            p.id === id ? { ...p, status: 'Paid' } : p
-          )
-        );
+        fetchPayments();
+        closeFormModal();
       })
-      .catch(err => console.error('Lỗi xác nhận thanh toán:', err));
+      .catch(err => console.error('Lỗi khi lưu thanh toán:', err));
   };
 
+  const handleDelete = (id) => {
+    if (window.confirm('Bạn có chắc chắn muốn xoá thanh toán này?')) {
+      fetch(`http://localhost:3000/api/payments/${id}`, {
+        method: 'DELETE'
+      })
+        .then(() => fetchPayments())
+        .catch(err => console.error('Lỗi khi xoá thanh toán:', err));
+    }
+  };
+
+  const openAddForm = () => {
+    setFormMode('add');
+    setFormData({
+      Order_id: '',
+      Payment_method: '',
+      Amount: '',
+      Payment_date: '',
+      Transaction_id: '',
+      Notes: ''
+    });
+    setShowFormModal(true);
+  };
+
+  const openEditForm = (payment) => {
+    setFormMode('edit');
+    setSelectedPayment(payment);
+    setFormData({
+      Order_id: payment.Order_id,
+      Payment_method: payment.Payment_method,
+      Amount: payment.Amount,
+      Payment_date: payment.Payment_date ? payment.Payment_date.substring(0, 10) : '',
+      Transaction_id: payment.Transaction_id,
+      Notes: payment.Notes
+    });
+    setShowFormModal(true);
+  };
+
+  const closeFormModal = () => {
+    setShowFormModal(false);
+    setSelectedPayment(null);
+    setFormData({
+      Order_id: '',
+      Payment_method: '',
+      Amount: '',
+      Payment_date: '',
+      Transaction_id: '',
+      Notes: ''
+    });
+  };
 
   const filteredPayments = payments.filter(payment =>
-    (`${payment.id}${payment.order_id}${payment.customer_name}`)
+    (`${payment.PaymentID}${payment.Order_id}${payment.Order_code}`)
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
@@ -39,8 +111,13 @@ const Payment_Management = () => {
     <section id="paymentManagement" className="pm-content-section">
       <div className="pm-card">
         <div className="pm-card-header">
-          <h3>Quản lý thanh toán</h3>
+        <div className="pm-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+  <h3 style={{ color: '#28a745', fontWeight: 'bold' }}>Quản lý thanh toán</h3>
+  <button className="btn btn-success" onClick={openAddForm}>Thêm thanh toán</button>
+</div>
+
         </div>
+
         <input
           type="text"
           className="form-group"
@@ -49,55 +126,37 @@ const Payment_Management = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+
         <table className="pm-table">
           <thead>
             <tr>
               <th>ID Thanh toán</th>
               <th>ID Đơn hàng</th>
-              <th>Khách hàng</th>
+              <th>Mã đơn</th>
               <th>Số tiền</th>
               <th>Phương thức</th>
-              <th>Trạng thái</th>
-              <th>Ngày GD</th>
+              <th>Ngày thanh toán</th>
+              <th>Giao dịch</th>
+              <th>Ghi chú</th>
               <th>Hành động</th>
             </tr>
           </thead>
           <tbody>
             {filteredPayments.map(payment => (
-              <tr key={payment.id}>
-                <td>#{payment.id}</td>
-                <td>#{payment.order_id}</td>
-                <td>{payment.customer_name}</td>
-                <td>{Number(payment.amount).toLocaleString('vi-VN')} VNĐ</td>
-                <td>{payment.method}</td>
+              <tr key={payment.PaymentID}>
+                <td>#{payment.PaymentID}</td>
+                <td>#{payment.Order_id}</td>
+                <td>{payment.Order_code || '—'}</td>
+                <td>{Number(payment.Amount).toLocaleString('vi-VN')} VNĐ</td>
+                <td>{payment.Payment_method}</td>
+                <td>{new Date(payment.Payment_date).toLocaleDateString('vi-VN')}</td>
+                <td>{payment.Transaction_id}</td>
+                <td>{payment.Notes}</td>
                 <td>
-                  <span
-                    className={`badge ${payment.status === 'Paid'
-                      ? 'badge-success'
-                      : payment.status === 'Unpaid'
-                        ? 'badge-warning'
-                        : 'badge-secondary'
-                      }`}
-                  >
-                    {payment.status}
-                  </span>
-                </td>
-                <td>{new Date(payment.transaction_date).toLocaleDateString('vi-VN')}</td>
-                <td>
-                  <button
-                    className="pm-btn pm-btn-info pm-btn-sm"
-                    onClick={() => setSelectedPayment(payment)}
-                  >
-                    Xem CT
-                  </button>
-                  {payment.status === 'Unpaid' && (
-                    <button
-                      className="pm-btn pm-btn-secondary pm-btn-sm"
-                      onClick={() => handleConfirm(payment.id)}
-                    >
-                      Xác nhận TT
-                    </button>
-                  )}
+                  <button className="pm-btn pm-btn-info pm-btn-sm" onClick={() => setSelectedPayment(payment)}>Xem</button>
+                 <button className="pm-btn-edit" onClick={() => openEditForm(payment)}>Sửa</button>
+<button className="pm-btn-delete" onClick={() => handleDelete(payment.PaymentID)}>Xoá</button>
+
                 </td>
               </tr>
             ))}
@@ -105,23 +164,48 @@ const Payment_Management = () => {
         </table>
       </div>
 
-    
-      {selectedPayment && (
+      {selectedPayment && !showFormModal && (
         <div className="modal">
           <div className="modal-content">
             <div className="modal-header">
               <h4>Chi tiết thanh toán</h4>
               <span className="close-btn" onClick={() => setSelectedPayment(null)}>&times;</span>
             </div>
-            <div className="form-group"><strong>ID Thanh toán:</strong> #{selectedPayment.id}</div>
-            <div className="form-group"><strong>ID Đơn hàng:</strong> #{selectedPayment.order_id}</div>
-            <div className="form-group"><strong>Khách hàng:</strong> {selectedPayment.customer_name}</div>
-            <div className="form-group"><strong>Số tiền:</strong> {Number(selectedPayment.amount).toLocaleString('vi-VN')} VNĐ</div>
-            <div className="form-group"><strong>Phương thức:</strong> {selectedPayment.method}</div>
-            <div className="form-group"><strong>Trạng thái:</strong> {selectedPayment.status}</div>
-            <div className="form-group"><strong>Ngày GD:</strong> {new Date(selectedPayment.transaction_date).toLocaleDateString('vi-VN')}</div>
+            <div className="form-group"><strong>ID Thanh toán:</strong> #{selectedPayment.PaymentID}</div>
+            <div className="form-group"><strong>ID Đơn hàng:</strong> #{selectedPayment.Order_id}</div>
+            <div className="form-group"><strong>Mã đơn hàng:</strong> {selectedPayment.Order_code || '—'}</div>
+            <div className="form-group"><strong>Số tiền:</strong> {Number(selectedPayment.Amount).toLocaleString('vi-VN')} VNĐ</div>
+            <div className="form-group"><strong>Phương thức:</strong> {selectedPayment.Payment_method}</div>
+            <div className="form-group"><strong>Ngày thanh toán:</strong> {new Date(selectedPayment.Payment_date).toLocaleDateString('vi-VN')}</div>
+            <div className="form-group"><strong>Mã giao dịch:</strong> {selectedPayment.Transaction_id}</div>
+            <div className="form-group"><strong>Ghi chú:</strong> {selectedPayment.Notes}</div>
             <div style={{ textAlign: 'right' }}>
               <button className="pm-btn pm-btn-secondary" onClick={() => setSelectedPayment(null)}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFormModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h4>{formMode === 'add' ? 'Thêm thanh toán' : 'Cập nhật thanh toán'}</h4>
+              <span className="close-btn" onClick={closeFormModal}>&times;</span>
+            </div>
+            <div className="form-group">
+              <input type="text" name="Order_id" value={formData.Order_id} onChange={handleInputChange} placeholder="ID đơn hàng" />
+              <input type="text" name="Payment_method" value={formData.Payment_method} onChange={handleInputChange} placeholder="Phương thức" />
+              <input type="number" name="Amount" value={formData.Amount} onChange={handleInputChange} placeholder="Số tiền" />
+              <input type="date" name="Payment_date" value={formData.Payment_date} onChange={handleInputChange} />
+              <input type="text" name="Transaction_id" value={formData.Transaction_id} onChange={handleInputChange} placeholder="Mã giao dịch" />
+              <input type="text" name="Notes" value={formData.Notes} onChange={handleInputChange} placeholder="Ghi chú" />
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <button className="pm-btn pm-btn-primary" onClick={handleSubmit}>
+                {formMode === 'add' ? 'Thêm' : 'Lưu'}
+              </button>
+              <button className="pm-btn pm-btn-secondary" onClick={closeFormModal}>Huỷ</button>
             </div>
           </div>
         </div>
