@@ -30,3 +30,29 @@
 .admin-button:hover {
   background-color: #27ae60;
 }
+.admin-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 100px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+}
+
+.logout-button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.logout-button:hover {
+  background-color: #f2f2f2;
+}

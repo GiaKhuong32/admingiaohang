@@ -18,6 +18,7 @@ app.use('/api/tracking', require('./routes/Tracking'));
 app.use('/api/routes', require('./routes/Route'));
 app.use('/api/route-points', require('./routes/RoutePoint'));
 app.use('/api/transactions', require('./routes/Transactions'));
+app.use('/api/accounts', require('./routes/Account'));
 
 app.listen(port, () => {
   console.log(`Server đang chạy tại http://localhost:${port}`);

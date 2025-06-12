@@ -6,6 +6,9 @@ const Sidebar = () => {
     <div>
       <div className="sidebar">
         <div className="sidebar-options">
+           <NavLink to= '/Account' className="sidebar-option">
+              <p>Thông tin tài khoản</p>
+            </NavLink>
             <NavLink to= '/User_Management' className="sidebar-option">
               <p>Quản lý người dùng</p>
             </NavLink>
