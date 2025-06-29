@@ -275,10 +275,15 @@ const User_Management = () => {
                 </>
               ) : (
                 <>
-                  <div className="um-form-group">
-                    <label htmlFor="Customer_type">Loại:</label>
-                    <input type="text" id="Customer_type" value={formData.Customer_type} onChange={handleChange} />
-                  </div>
+             <div className="um-form-group">
+  <label htmlFor="Customer_type">Loại:</label>
+  <select id="Customer_type" value={formData.Customer_type} onChange={handleChange} required>
+    <option value="">-- Chọn loại --</option>
+    <option value="Người gửi">Người gửi</option>
+    <option value="Người nhận">Người nhận</option>
+  </select>
+</div>
+
                   <div className="um-form-group">
                     <label htmlFor="Name">Tên:</label>
                     <input type="text" id="Name" value={formData.Name} onChange={handleChange} />

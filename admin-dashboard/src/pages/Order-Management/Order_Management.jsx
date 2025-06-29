@@ -227,17 +227,33 @@ const Order_Management = () => {
                 <label>Phí vận chuyển</label>
                 <input type="number" value={newOrder.Ship_cost} onChange={(e) => setNewOrder({ ...newOrder, Ship_cost: e.target.value })} />
               </div>
+<div className="om-form-group">
+  <label>Trạng thái thanh toán</label>
+  <select
+    value={newOrder.Payment_status}
+    onChange={(e) => setNewOrder({ ...newOrder, Payment_status: e.target.value })}
+    required
+  >
+    <option value="">-- Chọn trạng thái --</option>
+    <option value="Chưa thanh toán">Chưa thanh toán</option>
+    <option value="Đã thanh toán">Đã thanh toán</option>
+  </select>
+</div>
 
-              <div className="om-form-group">
-                <label>Trạng thái thanh toán</label>
-                <input type="text" value={newOrder.Payment_status} onChange={(e) => setNewOrder({ ...newOrder, Payment_status: e.target.value })} />
-              </div>
-
-              <div className="om-form-group">
-                <label>Trạng thái đơn hàng</label>
-                <input type="text" value={newOrder.Order_status} onChange={(e) => setNewOrder({ ...newOrder, Order_status: e.target.value })} />
-              </div>
-
+<div className="om-form-group">
+  <label>Trạng thái đơn hàng</label>
+  <select
+    value={newOrder.Order_status}
+    onChange={(e) => setNewOrder({ ...newOrder, Order_status: e.target.value })}
+    required
+  >
+    <option value="">-- Chọn trạng thái --</option>
+    <option value="Mới tạo">Mới tạo</option>
+    <option value="Đang giao">Đang giao</option>
+    <option value="Hoàn thành">Hoàn thành</option>
+    <option value="Thất bại">Thất bại</option>
+  </select>
+</div>
               <button className="om-btn om-btn-primary" type="submit">Lưu</button>
               <button className="om-btn om-btn-secondary" type="button" onClick={resetForm}>Hủy</button>
             </form>

@@ -5,12 +5,11 @@ const Account = () => {
   const [accounts, setAccounts] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editAccountId, setEditAccountId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [newAccount, setNewAccount] = useState({
     Username: '',
     Password: '',
-    Role: '',
-    Customer_id: '',
-    Staff_id: ''
+    Role: ''
   });
 
   useEffect(() => {
@@ -30,13 +29,15 @@ const Account = () => {
   const handleAddOrUpdateAccount = async () => {
     const method = editAccountId ? 'PUT' : 'POST';
     const url = `http://localhost:3000/api/accounts${editAccountId ? `/${editAccountId}` : ''}`;
+
     const payload = {
       Username: newAccount.Username,
-      Password: newAccount.Password,
-      Role: newAccount.Role,
-      Customer_id: newAccount.Customer_id || null,
-      Staff_id: newAccount.Staff_id || null
+      Role: newAccount.Role
     };
+
+    if (!editAccountId || newAccount.Password) {
+      payload.Password = newAccount.Password;
+    }
 
     try {
       await fetch(url, {
@@ -51,17 +52,16 @@ const Account = () => {
     }
   };
 
-  const handleEditAccount = (account) => {
-    setNewAccount({
-      Username: account.Username || '',
-      Password: account.Password || '',
-      Role: account.Role || '',
-      Customer_id: account.Customer_id || '',
-      Staff_id: account.Staff_id || ''
-    });
-    setEditAccountId(account.AccountID);
-    setShowModal(true);
-  };
+ const handleEditAccount = (account) => {
+  setNewAccount({
+    Username: account.Username || '',
+    Password: account.Password || '',
+    Role: account.Role || ''
+  });
+  setEditAccountId(account.AccountID);
+  setShowModal(true);
+};
+
 
   const handleDeleteAccount = async (id) => {
     if (window.confirm('Bạn có chắc muốn xoá tài khoản này?')) {
@@ -78,11 +78,10 @@ const Account = () => {
     setNewAccount({
       Username: '',
       Password: '',
-      Role: '',
-      Customer_id: '',
-      Staff_id: ''
+      Role: ''
     });
     setEditAccountId(null);
+    setShowPassword(false);
     setShowModal(false);
   };
 
@@ -101,8 +100,7 @@ const Account = () => {
             <tr>
               <th>Tên đăng nhập</th>
               <th>Vai trò</th>
-              <th>Khách hàng</th>
-              <th>Nhân viên</th>
+              <th>Mật khẩu</th>
               <th>Hành động</th>
             </tr>
           </thead>
@@ -111,8 +109,7 @@ const Account = () => {
               <tr key={account.AccountID}>
                 <td>{account.Username}</td>
                 <td>{account.Role}</td>
-                <td>{account.CustomerName || 'N/A'}</td>
-                <td>{account.StaffName || 'N/A'}</td>
+                <td>{account.Password}</td>
                 <td>
                   <button className="ac-btn ac-btn-warning ac-btn-sm" onClick={() => handleEditAccount(account)}>Sửa</button>
                   <button className="ac-btn ac-btn-danger ac-btn-sm" onClick={() => handleDeleteAccount(account.AccountID)}>Xoá</button>
@@ -134,24 +131,31 @@ const Account = () => {
                 <input type="text" value={newAccount.Username} onChange={(e) => setNewAccount({ ...newAccount, Username: e.target.value })} required />
               </div>
 
-              <div className="ac-form-group">
-                <label>Mật khẩu</label>
-                <input type="password" value={newAccount.Password} onChange={(e) => setNewAccount({ ...newAccount, Password: e.target.value })} required />
-              </div>
+          <div className="ac-form-group">
+  <label>Mật khẩu</label>
+  <input
+    type="text"
+    value={newAccount.Password}
+    onChange={(e) => setNewAccount({ ...newAccount, Password: e.target.value })}
+    required={!editAccountId}
+  />
+</div>
+
 
               <div className="ac-form-group">
                 <label>Vai trò</label>
-                <input type="text" value={newAccount.Role} onChange={(e) => setNewAccount({ ...newAccount, Role: e.target.value })} required />
-              </div>
-
-              <div className="ac-form-group">
-                <label>Khách hàng ID</label>
-                <input type="text" value={newAccount.Customer_id} onChange={(e) => setNewAccount({ ...newAccount, Customer_id: e.target.value })} />
-              </div>
-
-              <div className="ac-form-group">
-                <label>Nhân viên ID</label>
-                <input type="text" value={newAccount.Staff_id} onChange={(e) => setNewAccount({ ...newAccount, Staff_id: e.target.value })} />
+                <select
+                  value={newAccount.Role}
+                  onChange={(e) => setNewAccount({ ...newAccount, Role: e.target.value })}
+                  required
+                >
+                  <option value="">-- Chọn vai trò --</option>
+                  <option value="Khách hàng">Khách hàng</option>
+                  <option value="Nhân viên kho">Nhân viên kho</option>
+                  <option value="Nhân viên vận chuyển">Nhân viên vận chuyển</option>
+                  <option value="Lái xe">Lái xe</option>
+                  <option value="Admin">Admin</option>
+                </select>
               </div>
 
               <button className="ac-btn ac-btn-primary" type="submit">Lưu</button>

@@ -30,7 +30,7 @@ const Sidebar = () => {
               <NavLink to ='/Payment_Management' className="sidebar-option">
               <p>Quản lý thanh toán</p>
             </NavLink>
-              <NavLink to ='Transactions'className="sidebar-option">
+              <NavLink to ='/Transactions'className="sidebar-option">
               <p>Lịch sử giao dịch</p>
             </NavLink>
              <NavLink to ='/Warehouse_Setup'className="sidebar-option">

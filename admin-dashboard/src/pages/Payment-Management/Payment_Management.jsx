@@ -110,11 +110,9 @@ const Payment_Management = () => {
   return (
     <section id="paymentManagement" className="pm-content-section">
       <div className="pm-card">
-        <div className="pm-card-header">
         <div className="pm-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-  <h3 style={{ color: '#28a745', fontWeight: 'bold' }}>Quản lý thanh toán</h3>
-  <button className="btn btn-success" onClick={openAddForm}>Thêm thanh toán</button>
-</div>
+          <h3 style={{ color: '#28a745', fontWeight: 'bold' }}>Quản lý thanh toán</h3>
+       <button className="pm-btn pm-btn-primary" onClick={openAddForm}>Thêm thanh toán</button>
 
         </div>
 
@@ -153,10 +151,9 @@ const Payment_Management = () => {
                 <td>{payment.Transaction_id}</td>
                 <td>{payment.Notes}</td>
                 <td>
-                  <button className="pm-btn pm-btn-info pm-btn-sm" onClick={() => setSelectedPayment(payment)}>Xem</button>
-                 <button className="pm-btn-edit" onClick={() => openEditForm(payment)}>Sửa</button>
-<button className="pm-btn-delete" onClick={() => handleDelete(payment.PaymentID)}>Xoá</button>
-
+                  <button className="pm-btn pm-btn-info" onClick={() => setSelectedPayment(payment)}>Xem</button>
+                  <button className="pm-btn pm-btn-edit" onClick={() => openEditForm(payment)}>Sửa</button>
+                  <button className="pm-btn pm-btn-delete" onClick={() => handleDelete(payment.PaymentID)}>Xoá</button>
                 </td>
               </tr>
             ))}
@@ -189,17 +186,41 @@ const Payment_Management = () => {
       {showFormModal && (
         <div className="modal">
           <div className="modal-content">
-            <div className="modal-header">
-              <h4>{formMode === 'add' ? 'Thêm thanh toán' : 'Cập nhật thanh toán'}</h4>
+            <div className="modal-header" style={{ borderBottom: 'none' }}>
+              <h4 style={{ color: '#000', fontWeight: 'bold', margin: 0 }}>
+                {formMode === 'add' ? 'Thêm thanh toán' : 'Cập nhật thanh toán'}
+              </h4>
               <span className="close-btn" onClick={closeFormModal}>&times;</span>
             </div>
             <div className="form-group">
-              <input type="text" name="Order_id" value={formData.Order_id} onChange={handleInputChange} placeholder="ID đơn hàng" />
-              <input type="text" name="Payment_method" value={formData.Payment_method} onChange={handleInputChange} placeholder="Phương thức" />
-              <input type="number" name="Amount" value={formData.Amount} onChange={handleInputChange} placeholder="Số tiền" />
+              <label>ID đơn hàng:</label>
+              <input type="text" name="Order_id" value={formData.Order_id} onChange={handleInputChange} />
+
+              <label>Phương thức:</label>
+              <select
+                name="Payment_method"
+                value={formData.Payment_method}
+                onChange={handleInputChange}
+                style={{ width: '100%', padding: '10px', fontSize: '1em' }}
+              >
+                <option value="">-- Chọn phương thức --</option>
+                <option value="Tiền mặt">Tiền mặt</option>
+                <option value="Chuyển khoản">Chuyển khoản</option>
+                <option value="Ví điện tử">Ví điện tử</option>
+                <option value="COD">COD</option>
+              </select>
+
+              <label>Số tiền:</label>
+              <input type="number" name="Amount" value={formData.Amount} onChange={handleInputChange} />
+
+              <label>Ngày thanh toán:</label>
               <input type="date" name="Payment_date" value={formData.Payment_date} onChange={handleInputChange} />
-              <input type="text" name="Transaction_id" value={formData.Transaction_id} onChange={handleInputChange} placeholder="Mã giao dịch" />
-              <input type="text" name="Notes" value={formData.Notes} onChange={handleInputChange} placeholder="Ghi chú" />
+
+              <label>Mã giao dịch:</label>
+              <input type="text" name="Transaction_id" value={formData.Transaction_id} onChange={handleInputChange} />
+
+              <label>Ghi chú:</label>
+              <input type="text" name="Notes" value={formData.Notes} onChange={handleInputChange} />
             </div>
             <div style={{ textAlign: 'right' }}>
               <button className="pm-btn pm-btn-primary" onClick={handleSubmit}>

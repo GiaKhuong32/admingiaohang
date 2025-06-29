@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './Warehouse_Setup.css';
 
 const Warehouse_Setup = () => {
-  // State: ROUTES
   const [routes, setRoutes] = useState([]);
   const [showRouteModal, setShowRouteModal] = useState(false);
   const [editRouteId, setEditRouteId] = useState(null);
@@ -12,7 +11,6 @@ const Warehouse_Setup = () => {
     Departure_time: '', Estimated_time: '', Actual_time: '', Status: ''
   });
 
-  // State: ROUTE POINTS
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [routePoints, setRoutePoints] = useState([]);
   const [showPointModal, setShowPointModal] = useState(false);
@@ -21,7 +19,6 @@ const Warehouse_Setup = () => {
     Warehouse_id: '', Sequence_number: '', Estimated_arrival: '', Actual_arrival: '', Status: ''
   });
 
-  // State: WAREHOUSE
   const [warehouses, setWarehouses] = useState([]);
   const [showWarehouseModal, setShowWarehouseModal] = useState(false);
   const [editWarehouseId, setEditWarehouseId] = useState(null);
@@ -64,7 +61,28 @@ const Warehouse_Setup = () => {
       console.error('Lỗi fetch điểm dừng:', err);
     }
   };
-  // ================= ROUTE =================
+
+  const toInputDatetimeLocal = (dt) => {
+  if (!dt) return '';
+  const d = new Date(dt);
+  const offset = d.getTimezoneOffset(); 
+  const local = new Date(d.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+};
+  const formatDateTimeVN = (dt) => {
+    if (!dt) return '';
+    const date = new Date(dt);
+    return date.toLocaleString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
   const handleAddRoute = async () => {
     const {
       Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
@@ -143,7 +161,6 @@ const Warehouse_Setup = () => {
     setShowRouteModal(false);
   };
 
-  // ================= ROUTE POINT =================
   const handleAddPoint = async () => {
     const { Warehouse_id, Sequence_number, Estimated_arrival, Actual_arrival, Status } = newPoint;
     if (!Warehouse_id || !Sequence_number) return;
@@ -200,7 +217,6 @@ const Warehouse_Setup = () => {
     setShowPointModal(false);
   };
 
-  // ================= WAREHOUSE =================
   const handleAddWarehouse = async () => {
     const { Name, Street, Ward, District, City, Manager_id } = newWarehouse;
     if (!Name || !City) return;
@@ -257,48 +273,47 @@ const Warehouse_Setup = () => {
     setEditWarehouseId(null);
     setShowWarehouseModal(false);
   };
-return (
-  <div className="wh-wrapper" style={{ padding: 30 }}>
-    {/* ROUTES */}
-    <div className="wh-card">
-      <div className="wh-card-header">
-        <h3>Thiết lập Tuyến đường</h3>
-        <button className="wh-btn wh-btn-primary" onClick={() => {
-          resetRouteForm();
-          setShowRouteModal(true);
-        }}>Thêm Tuyến đường</button>
-      </div>
-      <table className="wh-table">
-        <thead>
-          <tr>
-            <th>Mã Tuyến</th>
-            <th>Kho bắt đầu</th>
-            <th>Kho kết thúc</th>
-            <th>Thời gian xuất phát</th>
-            <th>Thời gian dự kiến</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {routes.map(route => (
-            <tr key={route.RouteID}>
-              <td>{route.Route_code}</td>
-              <td>{route.StartWarehouse}</td>
-              <td>{route.EndWarehouse}</td>
-              <td>{route.Departure_time}</td>
-              <td>{route.Estimated_time}</td>
-              <td>{route.Status}</td>
-              <td>
-                <button className="wh-btn wh-btn-warning wh-btn-sm" onClick={() => handleEditRoute(route)}>Sửa</button>
-                <button className="wh-btn wh-btn-danger wh-btn-sm" onClick={() => handleDeleteRoute(route.RouteID)}>Xoá</button>
-                <button className="wh-btn wh-btn-info wh-btn-sm" onClick={() => fetchRoutePoints(route.RouteID)}>Điểm dừng</button>
-              </td>
+
+  return (
+    <div className="wh-wrapper" style={{ padding: 30 }}>
+      <div className="wh-card">
+        <div className="wh-card-header">
+          <h3>Thiết lập Tuyến đường</h3>
+          <button className="wh-btn wh-btn-primary" onClick={() => {
+            resetRouteForm();
+            setShowRouteModal(true);
+          }}>Thêm Tuyến đường</button>
+        </div>
+        <table className="wh-table">
+          <thead>
+            <tr>
+              <th>Mã Tuyến</th>
+              <th>Kho bắt đầu</th>
+              <th>Kho kết thúc</th>
+              <th>Thời gian xuất phát</th>
+              <th>Thời gian dự kiến</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {routes.map(route => (
+              <tr key={route.RouteID}>
+                <td>{route.Route_code}</td>
+                <td>{route.StartWarehouse}</td>
+                <td>{route.EndWarehouse}</td>
+                <td>{formatDateTimeVN(route.Departure_time)}</td>
+                <td>{formatDateTimeVN(route.Estimated_time)}</td>
+                <td>{route.Status}</td>
+                <td>
+                  <button className="wh-btn wh-btn-warning wh-btn-sm" onClick={() => handleEditRoute(route)}>Sửa</button>
+                  <button className="wh-btn wh-btn-danger wh-btn-sm" onClick={() => handleDeleteRoute(route.RouteID)}>Xoá</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
    {showRouteModal && (
   <div className="modal">
@@ -329,12 +344,21 @@ return (
 
         <div className="form-group">
           <label>Thời gian xuất phát:</label>
-          <input type="datetime-local" value={newRoute.Departure_time} onChange={e => setNewRoute({ ...newRoute, Departure_time: e.target.value })} />
+         <input
+  type="datetime-local"
+  value={toInputDatetimeLocal(newRoute.Departure_time)}
+  onChange={e => setNewRoute({ ...newRoute, Departure_time: e.target.value })}
+/>
+
         </div>
 
         <div className="form-group">
           <label>Thời gian dự kiến:</label>
-          <input type="text" value={newRoute.Estimated_time} onChange={e => setNewRoute({ ...newRoute, Estimated_time: e.target.value })} />
+          <input
+  type="datetime-local"
+  value={toInputDatetimeLocal(newRoute.Estimated_time)}
+  onChange={e => setNewRoute({ ...newRoute, Estimated_time: e.target.value })}
+/>
         </div>
 
         <div className="form-group">
@@ -354,8 +378,6 @@ return (
   </div>
 )}
 
-
-    {/* ROUTE POINTS */}
     {selectedRoute && (
       <div className="wh-card" style={{ marginTop: 30 }}>
         <div className="wh-card-header">
@@ -436,7 +458,6 @@ return (
   </div>
 )}
 
-    {/* DANH SÁCH KHO */}
     <div className="wh-card" style={{ marginTop: 30 }}>
       <div className="wh-card-header">
         <h3>Quản lý Kho hàng</h3>
@@ -515,7 +536,7 @@ return (
   </div>
 )}
 
-  </div> // end of main container
+  </div> 
 );
 };
 
