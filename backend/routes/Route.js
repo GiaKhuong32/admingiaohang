@@ -27,6 +27,9 @@ router.post('/', (req, res) => {
     Departure_time, Estimated_time, Actual_time, Status
   } = req.body;
 
+  console.log('--- DỮ LIỆU NHẬN ĐƯỢC ---');
+  console.log(req.body);
+
   const query = `
     INSERT INTO Route (Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
       Departure_time, Estimated_time, Actual_time, Status)
@@ -35,10 +38,14 @@ router.post('/', (req, res) => {
 
   db.query(query, [Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
     Departure_time, Estimated_time, Actual_time, Status], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Lỗi khi tạo lộ trình' });
+    if (err) {
+      console.error('Lỗi thêm tuyến:', err);
+      return res.status(500).json({ error: err.message });
+    }
     res.json({ message: 'Tạo lộ trình thành công', insertId: result.insertId });
   });
 });
+
 
 router.put('/:id', (req, res) => {
   const id = req.params.id;
@@ -46,6 +53,10 @@ router.put('/:id', (req, res) => {
     Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
     Departure_time, Estimated_time, Actual_time, Status
   } = req.body;
+
+  console.log('--- DỮ LIỆU NHẬN ĐƯỢC CHO PUT ---');
+  console.log('RouteID:', id);
+  console.log(req.body);
 
   const query = `
     UPDATE Route
@@ -56,17 +67,42 @@ router.put('/:id', (req, res) => {
 
   db.query(query, [Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
     Departure_time, Estimated_time, Actual_time, Status, id], (err) => {
-    if (err) return res.status(500).json({ error: 'Lỗi khi cập nhật lộ trình' });
+    if (err) {
+      console.error(' Lỗi SQL:', err);
+      return res.status(500).json({ error: 'Lỗi khi cập nhật lộ trình' });
+    }
     res.json({ message: 'Cập nhật lộ trình thành công' });
   });
 });
 
+
 router.delete('/:id', (req, res) => {
   const id = req.params.id;
-  db.query('DELETE FROM Route WHERE RouteID = ?', [id], (err) => {
-    if (err) return res.status(500).json({ error: 'Lỗi khi xoá lộ trình' });
-    res.json({ message: 'Xoá lộ trình thành công' });
+
+  // 1. Xoá tất cả điểm dừng trước
+  const deletePointsQuery = 'DELETE FROM Route_point WHERE Route_id = ?';
+
+  db.query(deletePointsQuery, [id], (err1) => {
+    if (err1) {
+      console.error('❌ Lỗi xoá điểm dừng:', err1);
+      return res.status(500).json({ error: 'Lỗi khi xoá điểm dừng' });
+    }
+
+    // 2. Sau đó mới xoá tuyến
+    const deleteRouteQuery = 'DELETE FROM Route WHERE RouteID = ?';
+
+    db.query(deleteRouteQuery, [id], (err2) => {
+      if (err2) {
+        console.error('❌ Lỗi xoá tuyến:', err2);
+        return res.status(500).json({ error: 'Lỗi khi xoá tuyến' });
+      }
+
+      res.json({ message: 'Đã xoá tuyến và tất cả điểm dừng liên quan' });
+    });
   });
 });
+
+
+
 
 module.exports = router;

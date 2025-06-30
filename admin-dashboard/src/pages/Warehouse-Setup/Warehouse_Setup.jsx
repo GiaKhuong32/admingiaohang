@@ -20,6 +20,8 @@ const Warehouse_Setup = () => {
   });
 
   const [warehouses, setWarehouses] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers] = useState([]);
   const [showWarehouseModal, setShowWarehouseModal] = useState(false);
   const [editWarehouseId, setEditWarehouseId] = useState(null);
   const [newWarehouse, setNewWarehouse] = useState({
@@ -30,6 +32,32 @@ const Warehouse_Setup = () => {
     fetchRoutes();
     fetchWarehouses();
   }, []);
+
+  useEffect(() => {
+  fetchRoutes();
+  fetchWarehouses();
+  fetchVehicles(); 
+  fetchDrivers(); 
+}, []);
+
+const fetchDrivers = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/api/staff');
+    const data = await res.json();
+    setDrivers(data.filter(s => s.Role === 'Tài xế')); 
+  } catch (err) {
+    console.error('Lỗi fetch drivers:', err);
+  }
+};
+const fetchVehicles = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/api/vehicles');
+    const data = await res.json();
+    setVehicles(data);
+  } catch (err) {
+    console.error('Lỗi fetch vehicles:', err);
+  }
+};
 
   const fetchRoutes = async () => {
     try {
@@ -82,47 +110,53 @@ const Warehouse_Setup = () => {
       hour12: false
     });
   };
+const toMySQLDatetime = (dt) => {
+  if (!dt) return null;
+  const d = new Date(dt);
+  return d.toISOString().slice(0, 19).replace('T', ' ');
+};
 
-  const handleAddRoute = async () => {
-    const {
-      Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
-      Departure_time, Estimated_time, Actual_time, Status
-    } = newRoute;
+ const handleAddRoute = async () => {
+  const {
+    Route_code, Vehicle_id, Driver_id, Start_wh_id, End_wh_id,
+    Departure_time, Estimated_time, Actual_time, Status
+  } = newRoute;
 
-    if (!Route_code || !Start_wh_id || !End_wh_id) return;
+  if (!Route_code || !Start_wh_id || !End_wh_id) return;
 
-    const payload = {
-      Route_code,
-      Vehicle_id: Vehicle_id || null,
-      Driver_id: Driver_id || null,
-      Start_wh_id,
-      End_wh_id,
-      Departure_time: Departure_time || null,
-      Estimated_time: Estimated_time || null,
-      Actual_time: Actual_time || null,
-      Status: Status || 'Đang lên kế hoạch'
-    };
-
-    try {
-      if (editRouteId) {
-        await fetch(`http://localhost:3000/api/routes/${editRouteId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      } else {
-        await fetch('http://localhost:3000/api/routes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      }
-      resetRouteForm();
-      fetchRoutes();
-    } catch (err) {
-      console.error('Lỗi thêm/cập nhật tuyến:', err);
-    }
+  const payload = {
+    Route_code,
+    Vehicle_id: Vehicle_id || null,
+    Driver_id: Driver_id || null,
+    Start_wh_id,
+    End_wh_id,
+    Departure_time: toMySQLDatetime(Departure_time),
+    Estimated_time: toMySQLDatetime(Estimated_time),
+    Actual_time: toMySQLDatetime(Actual_time),
+    Status: Status || 'Đang lên kế hoạch'
   };
+
+  try {
+    if (editRouteId) {
+      await fetch(`http://localhost:3000/api/routes/${editRouteId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await fetch('http://localhost:3000/api/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    resetRouteForm();
+    fetchRoutes();
+  } catch (err) {
+    console.error('Lỗi thêm/cập nhật tuyến:', err);
+  }
+};
+
 
   const handleEditRoute = (route) => {
     setNewRoute({
@@ -325,6 +359,37 @@ const Warehouse_Setup = () => {
           <label>Mã tuyến:</label>
           <input type="text" value={newRoute.Route_code} onChange={e => setNewRoute({ ...newRoute, Route_code: e.target.value })} required />
         </div>
+<div className="form-group">
+  <label>Xe (Vehicle):</label>
+  <select
+    value={newRoute.Vehicle_id}
+    onChange={e => setNewRoute({ ...newRoute, Vehicle_id: e.target.value })}
+    required
+  >
+    <option value="">-- Chọn xe --</option>
+    {vehicles.map(v => (
+      <option key={v.VehicleID} value={v.VehicleID}>
+        {v.License_plate} - {v.Vehicle_type}
+      </option>
+    ))}
+  </select>
+</div>
+
+<div className="form-group">
+  <label>Tài xế (Driver):</label>
+  <select
+    value={newRoute.Driver_id}
+    onChange={e => setNewRoute({ ...newRoute, Driver_id: e.target.value })}
+    required
+  >
+    <option value="">-- Chọn tài xế --</option>
+    <option value="1">Tài xế 1</option>
+    <option value="2">Tài xế 2</option>
+    <option value="3">Tài xế 3</option>
+  </select>
+</div>
+
+
 
         <div className="form-group">
           <label>Kho bắt đầu:</label>
@@ -361,15 +426,22 @@ const Warehouse_Setup = () => {
 />
         </div>
 
-        <div className="form-group">
-          <label>Thời gian thực tế:</label>
-          <input type="text" value={newRoute.Actual_time} onChange={e => setNewRoute({ ...newRoute, Actual_time: e.target.value })} />
-        </div>
+     <div className="form-group">
+  <label>Trạng thái:</label>
+  <select
+    value={newRoute.Status}
+    onChange={e => setNewRoute({ ...newRoute, Status: e.target.value })}
+    required
+  >
+    <option value="">-- Chọn trạng thái --</option>
+    <option value="Chưa khởi hành">Chưa khởi hành</option>
+    <option value="Đang đi">Đang đi</option>
+    <option value="Hoàn thành">Hoàn thành</option>
+  </select>
+</div>
 
-        <div className="form-group">
-          <label>Trạng thái:</label>
-          <input type="text" value={newRoute.Status} onChange={e => setNewRoute({ ...newRoute, Status: e.target.value })} />
-        </div>
+
+
 
         <button type="submit" className="btn btn-primary">Lưu</button>
         <button type="button" className="btn btn-secondary" onClick={resetRouteForm}>Hủy</button>
